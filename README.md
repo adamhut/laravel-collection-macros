@@ -1,7 +1,6 @@
 # A set of useful Laravel collection macros
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/spatie/laravel-collection-macros.svg?style=flat-square)](https://packagist.org/packages/spatie/laravel-collection-macros)
-[![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE.md)
 [![StyleCI](https://styleci.io/repos/64222176/shield)](https://styleci.io/repos/64222176)
 [![Build Status](https://img.shields.io/travis/spatie/laravel-collection-macros/master.svg?style=flat-square)](https://travis-ci.org/spatie/laravel-collection-macros)
 [![SensioLabsInsight](https://img.shields.io/sensiolabs/i/659f58d2-5324-4bb9-b2ff-8873c7a82d10.svg?style=flat-square)](https://insight.sensiolabs.com/projects/659f58d2-5324-4bb9-b2ff-8873c7a82d10)
@@ -9,6 +8,8 @@
 [![Total Downloads](https://img.shields.io/packagist/dt/spatie/laravel-collection-macros.svg?style=flat-square)](https://packagist.org/packages/spatie/laravel-collection-macros)
 
 This repository contains some useful collection macros.
+
+This version is targeted at Laravel 5.4. For Laravel 5.2 or 5.3, take a look at [the v1 branch](https://github.com/spatie/laravel-collection-macros/tree/v1).
 
 Spatie is a webdesign agency based in Antwerp, Belgium. You'll find an overview of all our open source projects [on our website](https://spatie.be/opensource).
 
@@ -28,41 +29,174 @@ You can pull in the package via composer:
 composer require spatie/laravel-collection-macros
 ```
 
-This service provider must be installed.
+The package will automatically register itself.
+
+
+## Macros
+
+- [`after`](#after)
+- [`before`](#before)
+- [`chunkBy`](#chunkby)
+- [`collect`](#collect)
+- [`eachCons`](#eachcons)
+- [`extract`](#extract)
+- [`filterMap`](#filtermap)
+- [`fromPairs`](#frompairs)
+- [`glob`](#glob)
+- [`groupByModel`](#groupbymodel)
+- [`ifAny`](#ifany)
+- [`ifEmpty`](#ifempty)
+- [`none`](#none)
+- [`paginate`](#paginate)
+- [`range`](#range)
+- [`sectionBy`](#sectionby)
+- [`simplePaginate`](#simplepaginate)
+- [`sliceBefore`](#slicebefore)
+- [`tail`](#tail)
+- [`toPairs`](#topairs)
+- [`transpose`](#transpose)
+- [`validate`](#validate)
+- [`withSize`](#withsize)
+
+### `after`
+
+Get the next item from the collection. 
 
 ```php
-// config/app.php
-'providers' => [
-    ...
-    Spatie\CollectionMacros\CollectionMacroServiceProvider::class,
-];
+$collection = collect([1,2,3]);
+
+$currentItem = 2;
+
+$currentItem = $collection->after($currentItem); // return 3;
+$collection->after($currentItem); // return null;
+
+$currentItem = $collection->after(function($item) {
+    return $item > 1;
+}); // return 3;
 ```
 
-
-## Usage
-
-These macro's will be added to the `Illuminate\Support\Collection` class.
-
-### `dd`
-
-Dumps the contents of the collection and terminates the script. This macro makes debugging a collection [much easier](https://murze.be/2016/06/debugging-collections/).
+You can also pass a second parameter to be used as a fallback.
 
 ```php
-collect([1,2,3])->dd();
+$collection = collect([1,2,3]);
+
+$currentItem = 3;
+
+$collection->after($currentItem, $collection->first()); // return 1;
 ```
 
-### `dump`
+### `before`
 
-Dumps the given arguments together with the current collection. This macro makes debugging a chain of collection functions much easier.
+Get the previous item from the collection. 
 
 ```php
-collect([1,2,3])
-    ->dump('original')
-    ->map(function(int $number) {
-        return $number * 2;
-    })
-    ->dump('modified')
-    ->dd();
+$collection = collect([1,2,3]);
+
+$currentItem = 2;
+
+$currentItem = $collection->before($currentItem); // return 1;
+$collection->before($currentItem); // return null;
+
+$currentItem = $collection->before(function($item) {
+    return $item > 2;
+}); // return 2;
+```
+
+You can also pass a second parameter to be used as a fallback.
+
+```php
+$collection = collect([1,2,3]);
+
+$currentItem = 1;
+
+$collection->before($currentItem, $collection->last()); // return 3;
+```
+
+### `chunkBy`
+
+Chunks the values from a collection into groups as long the given callback is true. If the optional parameter `$preserveKeys` as `true` is passed, it will preserve the original keys.
+
+```php
+collect(['A', 'A', 'B', 'A'])->chunkBy(function($item) {
+    return $item == 'A';
+}); // return Collection([['A', 'A'],['B'], ['A']])
+```
+
+### `collect`
+
+Get an item at a given key, and collect it.
+
+```php
+$collection = collect([
+    'foo' => [1, 2, 3], 
+    'bar' => [4, 5, 6],
+]);
+
+$collection->collect('foo'); // Collection([1, 2, 3])
+```
+
+You can also pass a second parameter to be used as a fallback.
+
+```php
+$collection = collect([
+    'foo' => [1, 2, 3], 
+    'bar' => [4, 5, 6],
+]);
+
+$collection->collect('baz', ['Nope']); // Collection(['Nope'])
+```
+
+### `eachCons`
+
+Get the following consecutive neighbours in a collection from a given chunk size. If the optional parameter `$preserveKeys` as `true` is passed, it will preserve the original keys.
+
+```php
+collect([1, 2, 3, 4])->eachCons(2); // return collect([[1, 2], [2, 3], [3, 4]])
+```
+
+### `extract`
+
+Extract keys from a collection. This is very similar to `only`, with two key differences:
+
+- `extract` returns an array of values, not an associative array
+- If a value doesn't exist, it will fill the value with `null` instead of omitting it
+
+`extract` is useful when using PHP 7.1 short `list()` syntax.
+
+```php
+[$name, $role] = collect($user)->extract('name', 'role.name');
+```
+
+### `filterMap`
+
+Map a collection and remove falsy values in one go.
+
+```php
+$collection = collect([1, 2, 3, 4, 5, 6])->filterMap(function ($number) {
+    $quotient = $number / 3;
+
+    return is_integer($quotient) ? $quotient : null;
+});
+
+$collection->toArray(); // returns [1, 2]
+```
+
+### `fromPairs`
+
+Transform a collection into an associative array form collection item.
+
+```php
+$collection = collect(['a', 'b'], ['c', 'd'], ['e', 'f'])->fromPairs();
+
+$collection->toArray(); // returns ['a' => 'b', 'c' => 'd', 'e' => 'f']
+```
+
+### `glob`
+
+Returns a collection of a `glob()` result.
+
+```php
+Collection::glob('config/*.php');
 ```
 
 ### `groupByModel`
@@ -70,60 +204,15 @@ collect([1,2,3])
 Similar to `groupBy`, but groups the collection by an Eloquent model. Since the key is an object instead of an integer or string, the results are divided into separate arrays.
 
 ```php
-$collection = collect([
-    ['model' => $model1, 'foo' => 'bar'],
-    ['model' => $model1, 'foo' => 'baz'],
-    ['model' => $model2, 'foo' => 'qux'],
-]);
-
-$collection->groupByModel('model');
+$posts->groupByModel('category');
 
 // [
-//     [
-//         'model' => $model1,
-//         'items' => [
-//             ['model' => $model1, 'foo' => 'bar'],
-//             ['model' => $model1, 'foo' => 'baz'],
-//         ],
-//     ],
-//     [
-//         'model' => $model2,
-//         'items' => [
-//             ['model' => $model2, 'foo' => 'qux'],
-//         ],
-//     ],
+//     [$categoryA, [/*...$posts*/]],
+//     [$categoryB, [/*...$posts*/]],
 // ];
 ```
 
-You can also use a callable for more flexibility:
-
-```php
-$collection->groupByModel(function ($item) {
-    return $item['model']
-});
-```
-
-If you want to specify the model key's name, you can pass it as the second parameter:
-
-```php
-$collection->groupByModel('model', 'myModel');
-
-// [
-//     [
-//         'myModel' => $model1,
-//         'items' => [
-//             ['model' => $model1, 'foo' => 'bar'],
-//             ['model' => $model1, 'foo' => 'baz'],
-//         ],
-//     ],
-//     [
-//         'myModel' => $model2,
-//         'items' => [
-//             ['model' => $model2, 'foo' => 'qux'],
-//         ],
-//     ],
-// ];
-```
+Full signature: `groupByModel($callback, $preserveKeys, $modelKey, $itemsKey)`
 
 ### `ifAny`
 
@@ -169,7 +258,19 @@ collect(['name' => 'foo'])->none(function ($key, $value) {
 }); // returns true
 ```
 
-> Note: When using a callable as argument, ``Collection::none` be`haves differently in Laravel 5.3 and higher. In 5.2, the parameter order is `$key, $value`, and in 5.3+ the parameter order is `$value, $key`. 
+### `paginate`
+
+Create a `LengthAwarePaginator` instance for the items in the collection.
+
+```php
+collect($posts)->paginate(5);
+```
+
+This paginates the contents of `$posts` with 5 items per page. `paginate` accepts quite some options, head over to [the Laravel docs](https://laravel.com/docs/5.4/pagination) for an in-depth guide.
+
+```
+paginate(int $perPage = 15, string $pageName = 'page', int $page = null, int $total = null, array $options = [])
+```
 
 ### `range`
 
@@ -179,83 +280,81 @@ Creates a new collection instance with a range of numbers. This functions accept
 collect()->range(1, 3)->toArray(); //returns [1,2,3]
 ```
 
-### `split`
+### `sectionBy`
 
-Splits a collection into the given number of groups.
-
-```php
-$collection = collect(['a', 'b', 'c', 'd', 'e', 'f'])->split(3);
-
-$collection->count(); // returns 3
-
-$collection->first(); // returns a collection with 'a' and 'b';
-$collection->last(); // returns a collection with 'e' and 'f';
-```
-
-### `validate`
-
-Returns `true` if the given `$callback` returns true for every item. If `$callback` is a string or an array, regard it as a validation rule.
+Splits a collection into sections grouped by a given key. Similar to `groupBy` but respects the order of the items in the collection and reuses existing keys.
 
 ```php
-collect(['foo', 'foo'])->validate(function ($item) {
-   return $item === 'foo';
-}); // returns true
-
-
-collect(['sebastian@spatie.be', 'bla'])->validate('email'); // returns false
-collect(['sebastian@spatie.be', 'freek@spatie.be'])->validate('email'); // returns true
-```
-
-
-### `toAssoc`
-
-Transform a collection into an associative array form collection item.
-
-```php
-$collection = collect(['a', 'b'], ['c', 'd'], ['e', 'f'])->toAssoc();
-
-$collection->toArray(); // returns ['a' => 'b', 'c' => 'd', 'e' => 'f']
-```
-
-### `mapToAssoc`
-
-Transform a collection into an associative array form collection item, allowing you to pass a callback to customize its key and value through a map operation.
-
-```php
-$employees = collect([
-    [
-        'name' => 'John',
-        'department' => 'Sales',
-        'email' => 'john@example.com',
-    ],
-    [
-        'name' => 'Jane',
-        'department' => 'Marketing',
-        'email' => 'jane@example.com',
-    ],
+$collection = collect([
+    ['name' => 'Lesson 1', 'module' => 'Basics'],
+    ['name' => 'Lesson 2', 'module' => 'Basics'],
+    ['name' => 'Lesson 3', 'module' => 'Advanced'],
+    ['name' => 'Lesson 4', 'module' => 'Advanced'],
+    ['name' => 'Lesson 5', 'module' => 'Basics'],
 ]);
 
-$employees->mapToAssoc(function ($employee) {
-    return [$employee['email'], $employee['name']];
-});
-
-$employees->toArray(); // returns ['john@example.com' => 'John', 'jane@example.com' => 'Jane']
-```
-
-## `partition`
-    
-Outputs a collection with two elements. Items in the first element did pass the given `$callback`, items in the second element did not.
-    
-```php
-collect(range(1,10))->partition(function($i) {
-   return $i <= 5;
-})->toArray();
+$collection->sectionBy('module');
 
 // [
-//    collect([1, 2, 3, 4, 5]),
-//    collect([6, 7, 8, 9, 10]),
-// ]
-```  
+//     ['Basics', [
+//         ['name' => 'Lesson 1', 'module' => 'Basics'],
+//         ['name' => 'Lesson 2', 'module' => 'Basics'],
+//     ]],
+//     ['Advanced', [
+//         ['name' => 'Lesson 3', 'module' => 'Advanced'],
+//         ['name' => 'Lesson 4', 'module' => 'Advanced'],
+//     ]],
+//     ['Basics', [
+//         ['name' => 'Lesson 5', 'module' => 'Basics'],
+//     ]],
+// ];
+```
+
+Full signature: `sectionBy($callback, $preserveKeys, $sectionKey, $itemsKey)`
+
+### `simplePaginate`
+
+Create a `Paginator` instance for the items in the collection.
+
+```php
+collect($posts)->simplePaginate(5);
+```
+
+This paginates the contents of `$posts` with 5 items per page. `simplePaginate` accepts quite some options, head over to [the Laravel docs](https://laravel.com/docs/5.4/pagination) for an in-depth guide.
+
+```
+simplePaginate(int $perPage = 15, string $pageName = 'page', int $page = null, int $total = null, array $options = [])
+```
+
+For a in-depth guide on pagination, check out [the Laravel docs](https://laravel.com/docs/5.4/pagination).
+
+### `sliceBefore`
+
+Slice the values out from a collection before the given callback is true. If the optional parameter `$preserveKeys` as `true` is passed, it will preserve the original keys.
+
+```php
+collect([20, 51, 10, 50, 66])->sliceBefore(function($item) {
+    return $item > 50;
+}); // return collect([[20],[51, 10, 50], [66])
+```
+
+### `tail`
+
+Extract the tail from a collection. So everything except the first element. It's a shorthand for `slice(1)->values()`, but nevertheless very handy. It's a shorthand for `slice(1)->values()`. If the optional parameter `$preserveKeys` as `true` is passed, it will preserve the keys and fallback to `slice(1)`.
+
+```php
+collect([1, 2, 3))->tail(); // return collect([2, 3])
+```
+
+### `toPairs`
+
+Transform a collection in to a array with pairs.
+
+```php
+$collection = collect(['a' => 'b', 'c' => 'd', 'e' => 'f'])->toPairs();
+
+$collection->toArray(); // returns ['a', 'b'], ['c', 'd'], ['e', 'f']
+```
 
 ### `transpose`
 
@@ -273,6 +372,29 @@ collect([
 //     ['Bob', 'bob@example.com', 'Plumber'],
 //     ['Mary', 'mary@example.com', 'Dentist'],
 // ]
+```
+
+### `validate`
+
+Returns `true` if the given `$callback` returns true for every item. If `$callback` is a string or an array, regard it as a validation rule.
+
+```php
+collect(['foo', 'foo'])->validate(function ($item) {
+   return $item === 'foo';
+}); // returns true
+
+
+collect(['sebastian@spatie.be', 'bla'])->validate('email'); // returns false
+collect(['sebastian@spatie.be', 'freek@spatie.be'])->validate('email'); // returns true
+```
+
+### `withSize`
+
+Create a new collection with the specified amount of items.
+
+```php
+Collection::withSize(1)->toArray(); // return [1];
+Collection::withSize(5)->toArray(); // return [1,2,3,4,5];
 ```
 
 ## Changelog

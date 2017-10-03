@@ -1,6 +1,54 @@
 # Changelog
 
-All Notable changes to `laravel-collection-macros` will be documented in this file
+All notable changes to `laravel-collection-macros` will be documented in this file
+
+## 3.1.0 - 2017-09-28
+- Added `filterMap`
+
+## 3.0.0 - 2017-08-30
+- Added support for Laravel 5.5, removed support for older versions
+- Added `glob` macro
+- Removed `dd` and `dump` macros
+- Changed parameter order for `groupByModel` and `sectionBy`
+
+## 2.7.0 - 2017-08-25
+- Add `$itemsKey` and `$preserveKeys` parameters to `groupByModel`
+
+## 2.6.0 - 2017-08-22
+
+- Added `tail`, `eachCons`, `sliceBefore` and `chunkBy`
+
+## 2.5.0 - 2017-08-03
+- Added customization options for `sectionBy`
+
+## 2.4.0 - 2017-08-02
+- Added: `sectionBy`
+
+## 2.3.1 - 2017-07-11
+- Fixed: `extract` now returns an instance of the current collection type
+
+## 2.3.0 - 2017-07-11
+- Added: `extract`
+
+## 2.2.0 - 2017-07-04
+- Added: `paginate` and `simplePaginate`
+
+## 2.1.0 - 2017-02-10
+- Added: `before` and `after`
+- Added: `collect`
+
+## 2.0.1 - 2017-01-24
+
+- Added: `toPairs` and `withSize`
+- Removed: `split`, `partition` and `mapToAssoc`
+- Renamed: `toAssoc` to `fromPairs`
+
+## 2.0.0 - 2017-01-24
+
+**DO NOT USE, THIS RELEASE WAS WRONGLY TAGGED**
+
+## 1.5.1 - 2016-01-24
+- fixed tests
 
 ## 1.5.0 - 2016-11-29
 - added `partition` method
@@ -32,7 +80,7 @@ All Notable changes to `laravel-collection-macros` will be documented in this fi
 
 ## 1.2.0 - 2016-08-11
 
-- added `assoc` and `mapToAssoc` macros
+- added `assoc` and `toAssoc` macros
 
 ## 1.1.0 - 2016-08-10
 

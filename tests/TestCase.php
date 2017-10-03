@@ -3,18 +3,17 @@
 namespace Spatie\CollectionMacros\Test;
 
 use Mockery;
-use Orchestra\Testbench\TestCase as BaseTestCase;
+use Orchestra\Testbench\TestCase as Orchestra;
+use Spatie\CollectionMacros\CollectionMacroServiceProvider;
 
-/**
- * @property \Mockery\MockInterface spy
- */
-abstract class TestCase extends BaseTestCase
+abstract class TestCase extends Orchestra
 {
+    /** @var \Mockery\MockInterface spy */
+    public $spy;
+
     public function setUp()
     {
         parent::setUp();
-
-        require_once __DIR__.'/../src/macros.php';
 
         $this->spy = Mockery::spy();
     }
@@ -22,5 +21,15 @@ abstract class TestCase extends BaseTestCase
     public function tearDown()
     {
         Mockery::close();
+    }
+
+    protected function getPackageProviders($app)
+    {
+        return [CollectionMacroServiceProvider::class];
+    }
+
+    public function avoidTestMarkedAsRisky()
+    {
+        $this->assertTrue(true);
     }
 }
